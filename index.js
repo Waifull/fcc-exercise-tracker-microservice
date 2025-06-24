@@ -14,17 +14,17 @@ let exercises = {}; // { userId: [ { description, duration, date } ] }
 // Helper function to generate unique IDs (simple)
 const generateId = () => Date.now().toString() + Math.floor(Math.random() * 1000).toString();
 
-// Root endpoint (optional)
+// Root endpoint
 app.get('/', (req, res) => {
   res.send('Exercise Tracker API');
 });
 
-// 1. Create new user
+// Create new user
 app.post('/api/users', (req, res) => {
   const username = req.body.username;
   if (!username) return res.status(400).json({ error: 'Username is required' });
 
-  // Check if username already exists (optional)
+  // Check if username already exists
   const existingUser = users.find(u => u.username === username);
   if (existingUser) return res.json(existingUser);
 
@@ -35,12 +35,12 @@ app.post('/api/users', (req, res) => {
   res.json(newUser);
 });
 
-// 2. Get all users
+// Get all users
 app.get('/api/users', (req, res) => {
   res.json(users);
 });
 
-// 3. Add exercise
+// Add exercise
 app.post('/api/users/:_id/exercises', (req, res) => {
   const userId = req.params._id;
   const user = users.find(u => u._id === userId);
@@ -69,7 +69,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const exercise = {
     description: description.toString(),
     duration: durationNum,
-    date: exerciseDate.toDateString()
+    date: exerciseDate.toDateString() // Simpan sebagai string
   };
 
   exercises[userId].push(exercise);
@@ -83,7 +83,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   });
 });
 
-// 4. Get user logs with optional filters
+// Get user logs with optional filters
 app.get('/api/users/:_id/logs', (req, res) => {
   const userId = req.params._id;
   const user = users.find(u => u._id === userId);
@@ -118,19 +118,22 @@ app.get('/api/users/:_id/logs', (req, res) => {
     log = log.slice(0, limit);
   }
 
+  // Pastikan date adalah string dengan format toDateString()
+  const formattedLog = log.map(e => ({
+    description: e.description,
+    duration: e.duration,
+    date: (typeof e.date === 'string') ? e.date : new Date(e.date).toDateString()
+  }));
+
   res.json({
     _id: user._id,
     username: user.username,
-    count: log.length,
-    log: log.map(e => ({
-      description: e.description,
-      duration: e.duration,
-      date: e.date.toString() 
-    }))
+    count: formattedLog.length,
+    log: formattedLog
   });
 });
 
-// Set port and start server
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Exercise Tracker app listening on port ${PORT}`);
